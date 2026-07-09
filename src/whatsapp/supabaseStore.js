@@ -33,6 +33,7 @@ class SupabaseStore {
     const { data, error } = await supabase.storage.from(BUCKET).download(`${session}.zip`);
     if (error) throw error;
     const buffer = Buffer.from(await data.arrayBuffer());
+    fs.mkdirSync(path.dirname(destPath), { recursive: true });
     fs.writeFileSync(destPath, buffer);
   }
 
