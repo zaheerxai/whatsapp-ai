@@ -15,8 +15,6 @@ const client = new Client({
   }),
   puppeteer: {
     headless: true,
-    // Add this line below
-    executablePath: '/opt/render/project/src/.cache/puppeteer/chrome/linux-146.0.7680.31/chrome-linux/chrome',
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
