@@ -1,3 +1,5 @@
+process.env.PUPPETEER_CACHE_DIR = '/opt/render/project/src/.chrome';
+
 const { Client, RemoteAuth } = require('whatsapp-web.js');
 const { SupabaseStore } = require('./supabaseStore');
 const { insertMessage } = require('../db/messages');
