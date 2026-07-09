@@ -11,10 +11,12 @@ let ready = false;
 const client = new Client({
   authStrategy: new RemoteAuth({
     store: new SupabaseStore(),
-    backupSyncIntervalMs: 300000 // 5 min — must stay above the library's enforced minimum
+    backupSyncIntervalMs: 300000
   }),
   puppeteer: {
     headless: true,
+    // Add this line below
+    executablePath: '/opt/render/project/src/.cache/puppeteer/chrome/linux-146.0.7680.31/chrome-linux/chrome',
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
