@@ -11,8 +11,21 @@ let ready = false;
 const client = new Client({
   authStrategy: new RemoteAuth({
     store: new SupabaseStore(),
-    backupSyncIntervalMs: 300000
+    backupSyncIntervalMs: 300000 // 5 min — must stay above the library's enforced minimum
   }),
+  // The {version} token gets substituted by whatsapp-web.js itself with
+  // whatever WhatsApp Web version it's actually being served, resolved
+  // against an actively-maintained community archive — not a hardcoded pin.
+  // A fixed version number here would work today and quietly stop working
+  // in a few months as WhatsApp deprecates old web-client versions; this
+  // stays current automatically. Mitigates (doesn't guarantee-fix) a known,
+  // currently-unresolved whatsapp-web.js bug where 'authenticated' fires but
+  // 'ready' never does — see the diagnostic listeners below for confirming
+  // whether that's actually what's happening versus a resource issue.
+  webVersionCache: {
+    type: 'remote',
+    remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/{version}.html'
+  },
   puppeteer: {
     headless: true,
     executablePath: '/opt/render/project/src/.puppeteer-cache/linux-146.0.7680.31/chrome',
@@ -33,6 +46,14 @@ client.on('qr', (qr) => {
   latestQr = qr;
   console.log('QR ready — visit /qr to scan');
 });
+
+// These two did not exist before and matter specifically for diagnosing a
+// stuck-after-scan state: if 'authenticated' fires but 'ready' never does,
+// that's a known upstream whatsapp-web.js bug, not a resource problem — see
+// the Known Limitations note on this. If 'authenticated' itself never fires,
+// that points elsewhere (network, RAM, or a genuinely broken page load).
+client.on('authenticated', () => console.log('WhatsApp authenticated — waiting for ready...'));
+client.on('auth_failure', (msg) => console.error('WhatsApp auth failure:', msg));
 
 client.on('ready', () => {
   latestQr = null;
