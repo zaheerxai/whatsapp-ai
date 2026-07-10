@@ -4,6 +4,17 @@ const { client, restart } = require('./src/whatsapp/client');
 
 app.listen(config.port, () => console.log(`Server listening on port ${config.port}`));
 
+const express = require('express');
+const app = express();
+
+app.get('/', (req, res) => {
+  res.status(200).send('Bot is running!');
+});
+
+app.listen(3000, () => {
+  console.log('Server listening on port 3000');
+});
+
 client.initialize();
 
 // whatsapp-web.js runs WhatsApp Web inside a real headless browser page.
