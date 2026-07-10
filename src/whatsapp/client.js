@@ -1,5 +1,3 @@
-process.env.PUPPETEER_CACHE_DIR = '/opt/render/project/src/.chrome';
-
 const { Client, RemoteAuth } = require('whatsapp-web.js');
 const { SupabaseStore } = require('./supabaseStore');
 const { insertMessage } = require('../db/messages');
@@ -17,8 +15,6 @@ const client = new Client({
   }),
   puppeteer: {
     headless: true,
-    // We force it to look in the local .cache folder we created at startup
-    executablePath: process.env.CHROME_PATH || '/opt/render/project/src/.chrome/chrome-linux/chrome',
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
