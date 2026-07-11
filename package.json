@@ -8,7 +8,8 @@
   },
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "postinstall": "node scripts/clean-puppeteer-cache.js && node node_modules/puppeteer/install.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",

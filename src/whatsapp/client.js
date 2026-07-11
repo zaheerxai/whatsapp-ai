@@ -28,15 +28,12 @@ const client = new Client({
   },
   puppeteer: {
     headless: true,
-    executablePath: '/opt/render/project/src/.puppeteer-cache/linux-146.0.7680.31/chrome',
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
       '--disable-accelerated-2d-canvas',
       '--no-first-run',
-      '--no-zygote',
-      '--single-process', // Warning: helps save memory but can be unstable
       '--disable-gpu'
     ]
   }
