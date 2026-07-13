@@ -67,10 +67,30 @@ client.on('loading_screen', (percent, message) => {
   console.log(`[diagnostic] Loading: ${percent}% - ${message}`);
 });
 
+// Add a timeout for the ready event — if authenticated fires but ready
+// never does after 30 seconds, that's a known whatsapp-web.js bug, not
+// a network issue. Log it clearly so it's not confused with a hung state.
+let readyTimeout = null;
+function resetReadyTimeout() {
+  if (readyTimeout) clearTimeout(readyTimeout);
+  readyTimeout = setTimeout(() => {
+    if (!ready) {
+      console.warn(
+        '[diagnostic] Authenticated but ready event did not fire within 30s. ' +
+        'This is a known whatsapp-web.js issue. The client may still work, but ' +
+        'restart if messages are not being received.'
+      );
+    }
+  }, 30000);
+}
+
+client.on('authenticated', resetReadyTimeout);
+
 client.on('ready', () => {
   latestQr = null;
   ready = true;
   console.log('WhatsApp client ready');
+  if (readyTimeout) clearTimeout(readyTimeout);
 });
 
 // Fires whenever RemoteAuth finishes a backup — the real proof persistence
@@ -111,27 +131,6 @@ client.on('message', async (msg) => {
     await humanDelay();
     await msg.reply(reply);
   }
-});
-
-// Add a timeout for the ready event — if authenticated fires but ready
-// never does after 30 seconds, that's a known whatsapp-web.js bug, not
-// a network issue. Log it clearly so it's not confused with a hung state.
-let readyTimeout = null;
-function resetReadyTimeout() {
-  if (readyTimeout) clearTimeout(readyTimeout);
-  readyTimeout = setTimeout(() => {
-    if (!ready) {
-      console.warn(
-        '[diagnostic] Authenticated but ready event did not fire within 30s. ' +
-        'This is a known whatsapp-web.js issue. The client may still work, but ' +
-        'restart if messages are not being received.'
-      );
-    }
-  }, 30000);
-}
-client.on('authenticated', resetReadyTimeout);
-client.on('ready', () => {
-  if (readyTimeout) clearTimeout(readyTimeout);
 });
 
 module.exports = {
