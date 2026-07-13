@@ -40,6 +40,15 @@ const MAX_RESTARTS_PER_WINDOW = 5;
 const RESTART_WINDOW_MS = 2 * 60 * 1000; // 2 minutes
 const RESTART_DELAY_MS = 4000; // let the old browser process actually release
 
+// Transient errors that shouldn't trigger a full restart
+const TRANSIENT_PATTERNS = [
+  'Execution context was destroyed',
+  'Target page, context or browser has been closed',
+  'Puppeteer.Browser is not allowed to be used directly'
+];
+let transientTimestamps = [];
+const MAX_TRANSIENT_PER_WINDOW = 10;
+
 async function recoverFromCrash(label, err) {
   if (restarting) return; // noise from the same crash cascade — ignore silently
 
