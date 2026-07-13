@@ -111,9 +111,16 @@ client.on('ready', () => {
   if (readyTimeout) clearTimeout(readyTimeout);
 });
 
-// Fires whenever RemoteAuth finishes a backup — the real proof persistence
-// is working, before you even get to the restart test.
-client.on('remote_session_saved', () => console.log('Session backed up to Supabase'));
+// Throttle excessive backup notifications — RemoteAuth can fire remote_session_saved
+// multiple times rapidly during initialization. Only log every 5 seconds max.
+let lastSaveLog = 0;
+client.on('remote_session_saved', () => {
+  const now = Date.now();
+  if (now - lastSaveLog >= 5000) {
+    console.log('Session backed up to Supabase');
+    lastSaveLog = now;
+  }
+});
 
 client.on('disconnected', (reason) => {
   ready = false;
