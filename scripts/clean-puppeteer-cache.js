@@ -7,11 +7,22 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const cacheDir = path.join(os.homedir(), '.cache', 'puppeteer');
+// Clear both possible Puppeteer cache locations
+const cacheDirs = [
+  path.join(os.homedir(), '.cache', 'puppeteer'),
+  '/opt/render/project/src/.puppeteer-cache',
+  path.join(process.cwd(), '.puppeteer-cache')
+];
 
-try {
+cacheDirs.forEach(cacheDir => {
+  try {
     fs.rmSync(cacheDir, { recursive: true, force: true });
     console.log(`Cleared ${cacheDir} (if it existed) before installing Chrome.`);
-} catch (e) {
+  } catch (e) {
     console.log(`Nothing to clear at ${cacheDir}, or clearing failed harmlessly:`, e.message);
-}
+  }
+});
+
+// Set environment variables for Puppeteer
+process.env.PUPPETEER_CACHE_DIR = path.join(process.cwd(), '.puppeteer');
+console.log('Set PUPPETEER_CACHE_DIR to:', process.env.PUPPETEER_CACHE_DIR);

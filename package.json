@@ -9,7 +9,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "postinstall": "node scripts/clean-puppeteer-cache.js && node node_modules/puppeteer/install.mjs"
+    "postinstall": "node scripts/clean-puppeteer-cache.js && PUPPETEER_CACHE_DIR=/opt/render/project/src/.puppeteer PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=false npx puppeteer@latest browsers install chrome"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
