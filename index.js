@@ -43,6 +43,17 @@ const RESTART_DELAY_MS = 4000; // let the old browser process actually release
 async function recoverFromCrash(label, err) {
   if (restarting) return; // noise from the same crash cascade — ignore silently
 
+  const errMsg = err?.message || String(err);
+
+  // Don't restart on expected navigation/context destruction errors
+  // These are transient and will resolve on their own
+  if (errMsg.includes('Execution context was destroyed') ||
+    errMsg.includes('Target page, context or browser has been closed') ||
+    errMsg.includes('Puppeteer.Browser is not allowed to be used directly')) {
+    console.log(`[transient] ${label}: ${errMsg}`);
+    return;
+  }
+
   const now = Date.now();
   restartTimestamps = restartTimestamps.filter((t) => now - t < RESTART_WINDOW_MS);
 
@@ -56,7 +67,7 @@ async function recoverFromCrash(label, err) {
     process.exit(1);
   }
 
-  console.error(`${label} — restarting WhatsApp client in ${RESTART_DELAY_MS}ms:`, err?.message || err);
+  console.error(`${label} — restarting WhatsApp client in ${RESTART_DELAY_MS}ms:`, errMsg);
   restartTimestamps.push(now);
   restarting = true;
   try {
