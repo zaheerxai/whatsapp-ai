@@ -10,8 +10,6 @@ services:
         value: production
       - key: PUPPETEER_CACHE_DIR
         value: /opt/render/project/src/.puppeteer
-      - key: PUPPETEER_EXECUTABLE_PATH
-        value: /opt/render/project/src/.puppeteer/linux-1409704/chrome-linux/chrome
       - key: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
         value: 'false'
     

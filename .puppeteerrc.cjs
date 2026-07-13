@@ -5,14 +5,18 @@ const path = require('path');
 
 module.exports = {
   // Cache directory where Chrome will be downloaded
+  // Render environment uses /opt/render/project/src
   cacheDirectory: process.env.PUPPETEER_CACHE_DIR || path.join(process.cwd(), '.puppeteer'),
   
-  // Chrome executable path (will be found in cache directory)
-  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+  // Don't set executablePath — let Puppeteer auto-discover Chrome in the cache directory
+  // This prevents hardcoded version mismatches
   
-  // Download Chrome when installing (important for Render)
+  // Download Chrome when installing (important for Render and local development)
   skipDownload: false,
   
-  // Log downloads
+  // Verify downloaded binaries
+  verifyDownloads: true,
+  
+  // Log for debugging
   logLevel: 'info'
 };
