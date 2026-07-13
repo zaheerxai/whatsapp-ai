@@ -44,17 +44,16 @@ async function recoverFromCrash(label, err) {
   if (restarting) return; // noise from the same crash cascade — ignore silently
 
   const errMsg = err?.message || String(err);
+  const now = Date.now();
 
-  // Don't restart on expected navigation/context destruction errors
-  // These are transient and will resolve on their own
-  if (errMsg.includes('Execution context was destroyed') ||
-    errMsg.includes('Target page, context or browser has been closed') ||
-    errMsg.includes('Puppeteer.Browser is not allowed to be used directly')) {
-    console.log(`[transient] ${label}: ${errMsg}`);
-    return;
+  if (TRANSIENT_PATTERNS.some((p) => errMsg.includes(p))) {
+    transientTimestamps = transientTimestamps.filter((t) => now - t < RESTART_WINDOW_MS);
+    transientTimestamps.push(now);
+    console.log(`[transient] ${label}: ${errMsg} (${transientTimestamps.length}/${MAX_TRANSIENT_PER_WINDOW} in window)`);
+    if (transientTimestamps.length < MAX_TRANSIENT_PER_WINDOW) return;
+    console.error(`${label} — ${MAX_TRANSIENT_PER_WINDOW} "transient" errors in ${RESTART_WINDOW_MS / 1000}s stopped looking transient. Falling through to normal recovery.`);
   }
 
-  const now = Date.now();
   restartTimestamps = restartTimestamps.filter((t) => now - t < RESTART_WINDOW_MS);
 
   if (restartTimestamps.length >= MAX_RESTARTS_PER_WINDOW) {
