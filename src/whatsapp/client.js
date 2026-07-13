@@ -22,10 +22,7 @@ const client = new Client({
   // currently-unresolved whatsapp-web.js bug where 'authenticated' fires but
   // 'ready' never does — see the diagnostic listeners below for confirming
   // whether that's actually what's happening versus a resource issue.
-  webVersionCache: {
-    type: 'remote',
-    remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/{version}.html'
-  },
+
   puppeteer: {
     headless: true,
     args: [
@@ -141,9 +138,9 @@ module.exports = {
   client,
   getQr: () => latestQr,
   isReady: () => ready,
+  getPage: () => client.pupPage,
   async restart() {
     console.log('Restarting WhatsApp client...');
-    if (readyTimeout) clearTimeout(readyTimeout);
     try {
       // destroy() on an already-broken browser context can hang instead of
       // throwing — race it against a timeout so a stuck teardown can't stall
@@ -153,25 +150,25 @@ module.exports = {
         new Promise((_, reject) => setTimeout(() => reject(new Error('destroy() timed out')), 10000))
       ]);
     } catch (e) {
-      // If destroy() didn't cleanly finish, the old browser process might
-      // still be alive underneath. Initializing a fresh one on top of that
-      // risks two live WhatsApp Web connections both feeding events into
-      // the same client — i.e. every incoming message answered twice.
-      // Safer to give up and exit than gamble on a half-destroyed browser.
-      console.error('client.destroy() failed or timed out — force-killing browser:', e.message);
-      
-      // Try to forcefully kill any remaining Chromium processes
-      try {
-        if (client.pupBrowser) {
-          const browser = client.pupBrowser;
-          await Promise.race([
-            browser.close(),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('browser.close() timed out')), 5000))
-          ]);
-        }
-      } catch (killErr) {
-        console.error('Failed to force-close browser:', killErr.message);
+      // destroy() didn't cleanly finish. process.exit() below kills THIS
+      // Node process, but does NOT kill the underlying Chromium child
+      // process on its own — Windows in particular does not clean up
+      // orphaned child processes just because their parent exited. Left
+      // alone, that orphan keeps holding a lock on the local .wwebjs_auth
+      // profile, and every subsequent launch attempt fails against that same
+      // lock — which looks like a deterministic crash-on-every-restart
+      // rather than the transient reconnect churn this handler is designed
+      // for. Force-killing the browser process directly, by PID, before
+      // exiting prevents that: the next launch starts against a genuinely
+      // free profile instead of fighting a zombie for it.
+      const browserProcess = client.pupBrowser?.process();
+      if (browserProcess && !browserProcess.killed) {
+        console.error('client.destroy() failed or timed out — force-killing the browser process directly:', e.message);
+        browserProcess.kill('SIGKILL');
+      } else {
+        console.error('client.destroy() failed or timed out, and no browser process handle was available to force-kill:', e.message);
       }
+      process.exit(1);
     }
     await client.initialize();
   }
