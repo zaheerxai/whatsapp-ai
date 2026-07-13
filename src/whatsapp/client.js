@@ -24,7 +24,7 @@ const client = new Client({
   // whether that's actually what's happening versus a resource issue.
 
   puppeteer: {
-    headless: true,
+    headless: 'new',  // Use new headless mode (more stable)
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
@@ -33,10 +33,19 @@ const client = new Client({
       '--no-first-run',
       '--disable-gpu',
       '--disable-web-resources',
-      '--disable-blink-features=AutomationControlled'
+      '--disable-blink-features=AutomationControlled',
+      '--disable-extensions',
+      '--disable-plugins',
+      '--disable-default-apps',
+      '--disable-sync',
+      '--metrics-recording-only',
+      '--mute-audio',
+      '--no-default-browser-check',
+      '--disable-hang-monitor'  // Prevent hangs when user Chrome is open
     ],
-    timeout: 60000,  // 60s timeout for browser launch
-    protocolTimeout: 180000  // 180s timeout for protocol commands
+    timeout: 90000,  // 90s timeout for browser launch
+    protocolTimeout: 180000,  // 180s timeout for protocol commands
+    dumpio: process.env.DEBUG_PUPPETEER === 'true'  // Enable if you need to debug Puppeteer
   }
 });
 
@@ -60,11 +69,20 @@ client.on('auth_failure', (msg) => {
 });
 
 client.on('page_opened', () => {
-  console.log('[diagnostic] Browser page opened');
+  console.log('[diagnostic] Browser page opened - Chromium launched successfully');
 });
 
 client.on('loading_screen', (percent, message) => {
-  console.log(`[diagnostic] Loading: ${percent}% - ${message}`);
+  if (percent === 100) {
+    console.log(`[diagnostic] Loading: ${percent}% - ${message} (Waiting for ready event...)`);
+  } else {
+    console.log(`[diagnostic] Loading: ${percent}% - ${message}`);
+  }
+});
+
+// Diagnostic: Log when WhatsApp web is actually loaded
+client.on('call', (call) => {
+  console.log(`[diagnostic] Call detected: ${call.from}`);
 });
 
 // Add a timeout for the ready event — if authenticated fires but ready
