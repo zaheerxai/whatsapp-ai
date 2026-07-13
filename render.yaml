@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: whatsapp-ai-agent
+    env: node
+    plan: standard
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+    
+    # System packages required for Puppeteer/Chromium
+    buildpacks:
+      - url: https://github.com/render-examples/puppeteer-render-buildpack.git

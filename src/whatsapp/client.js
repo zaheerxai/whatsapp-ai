@@ -4,9 +4,17 @@ const { insertMessage } = require('../db/messages');
 const { dispatch } = require('../commands');
 const config = require('../config');
 const { humanDelay } = require('../utils/delay');
+const os = require('os');
 
 let latestQr = null;
 let ready = false;
+
+// Diagnostic: Log environment and system info
+console.log('[init] Environment:', process.env.NODE_ENV || 'development');
+console.log('[init] Platform:', process.platform);
+console.log('[init] Available memory:', Math.round(os.freemem() / 1024 / 1024), 'MB');
+console.log('[init] Total memory:', Math.round(os.totalmem() / 1024 / 1024), 'MB');
+console.log('[init] Initializing WhatsApp client...');
 
 const client = new Client({
   authStrategy: new RemoteAuth({
@@ -48,6 +56,8 @@ const client = new Client({
     dumpio: process.env.DEBUG_PUPPETEER === 'true'  // Enable if you need to debug Puppeteer
   }
 });
+
+console.log('[init] WhatsApp Client object created — waiting for browser launch...');
 
 client.on('qr', (qr) => {
   latestQr = qr;
